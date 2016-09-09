@@ -794,26 +794,26 @@ class shoppingCart extends base {
         // calculate Product Price without Specials, Sales or Discounts
               $total_before_discounts += $attribute_price->fields['options_values_price'];
             } // eof: attribute price
-        // adjust for downloads
-            // adjust products price
-              $check_attribute = $attribute_price->fields['products_attributes_id'];
-              $sql = "select *
-                      from " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . "
-                      where products_attributes_id = '" . $check_attribute . "'";
-              $check_download = $db->Execute($sql);
-              if ($check_download->RecordCount()) {
+// adjust for downloads
+// adjust products price
+  $check_attribute = $attribute_price->fields['products_attributes_id'];
+  $sql = "select *
+                    from " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . "
+                    where products_attributes_id = '" . $check_attribute . "'";
+  $check_download = $db->Execute($sql);
+  if ($check_download->RecordCount()) {
             // count number of downloads
                 $this->download_count += ($check_download->RecordCount() * $qty);
-            // do not count download as free when set to product/download combo
-                if ($adjust_downloads == 1 and $product->fields['product_is_always_free_shipping'] != 2) {
-                  $freeShippingTotal += $products_price;
-                  $this->free_shipping_item += $qty;
-                }
-            // adjust for attributes price
-                $freeShippingTotal += $new_attributes_price;
-            //die('I SEE B ' . $this->free_shipping_price);
-              }
-            //  echo 'I SEE ' . $this->total . ' vs ' . $this->free_shipping_price . ' items: ' . $this->free_shipping_item. '<br>';
+// do not count download as free when set to product/download combo
+    if ($adjust_downloads == 1 and $product->fields['product_is_always_free_shipping'] != 2) {
+      $freeShippingTotal += $products_price;
+      $this->free_shipping_item += $qty;
+    }
+// adjust for attributes price
+    $freeShippingTotal += $new_attributes_price;
+//die('I SEE B ' . $this->free_shipping_price);
+  }
+//  echo 'I SEE ' . $this->total . ' vs ' . $this->free_shipping_price . ' items: ' . $this->free_shipping_item. '<br>';
 
             ////////////////////////////////////////////////
             // calculate additional attribute charges

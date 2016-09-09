@@ -1365,7 +1365,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     return $zp_result;
   }
 
-  // replacement for fmod to manage values < 1
+// replacement for fmod to manage values < 1
   function fmod_round($x, $y) {
     if ($y == 0) {
       return 0;
@@ -1376,7 +1376,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     $zc_round_ceil = round($zc_round,0);
     $multiplier = $zc_round_ceil * $y;
     $results = abs(round($x - $multiplier, 6));
-    return $results;
+     return $results;
   }
 
 ////
@@ -1649,7 +1649,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     return isset($array[$key]) ? $array[$key] : $default;
   }
 
-  /////////////////////////////////////////////
+/////////////////////////////////////////////
 ////
 // call additional function files
 // prices and quantities

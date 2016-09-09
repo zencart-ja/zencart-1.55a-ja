@@ -150,12 +150,12 @@ class queryFactory extends base {
       include('nddbc.html');
     }
     echo '<div class="systemError">';
-    if (defined('STRICT_ERROR_REPORTING') && STRICT_ERROR_REPORTING == true)
+    if (defined('STRICT_ERROR_REPORTING') && STRICT_ERROR_REPORTING == true) 
     {
       echo $this->error_number . ' ' . $this->error_text;
       echo '<br />in:<br />[' . (strstr($this->zf_sql, 'db_cache') ? 'db_cache table' : $this->zf_sql) . ']<br />';
     } else {
-      echo 'WARNING: An Error occurred, please refresh the page and try again.';
+      echo 'WARNING: An Error occurred, please refresh the page and try again.';	
     }
     $backtrace_array = debug_backtrace();
     $query_factory_caller = '';
@@ -441,12 +441,12 @@ class queryFactory extends base {
         return (int)$value;
       break;
       case 'string':
-        if (preg_match('/NULL/', $value)) return 'null';
+        if (preg_match('/null/i', $value)) return 'null';
+        if (isset($typeArray[1])) {
+          $regexp = $typeArray[1];
+        }
         return '\'' . $this->prepare_input($value) . '\'';
       break;
-      case 'stringIgnoreNull':
-        return '\'' . $this->prepare_input($value) . '\'';
-        break;
       case 'noquotestring':
         return $this->prepare_input($value);
       break;

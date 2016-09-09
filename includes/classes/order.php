@@ -55,7 +55,8 @@ class order extends base {
                          billing_state, billing_country, billing_address_format_id,
                          payment_method, payment_module_code, shipping_method, shipping_module_code,
                          coupon_code, cc_type, cc_owner, cc_number, cc_expires, currency, currency_value,
-                         date_purchased, orders_status, last_modified, order_total, order_tax, ip_address
+                         date_purchased, orders_status, last_modified, order_total, order_tax, ip_address,
+                         delivery_telephone, delivery_fax, billing_telephone, billing_fax, customers_fax
                         from " . TABLE_ORDERS . "
                         where orders_id = '" . (int)$order_id . "'";
 
@@ -138,6 +139,7 @@ class order extends base {
                             'country' => $order->fields['customers_country'],
                             'format_id' => $order->fields['customers_address_format_id'],
                             'telephone' => $order->fields['customers_telephone'],
+                            'fax' => $order->fields['customers_fax'],
                             'email_address' => $order->fields['customers_email_address']);
 
     $this->delivery = array('name' => $order->fields['delivery_name'],
@@ -148,6 +150,8 @@ class order extends base {
                             'postcode' => $order->fields['delivery_postcode'],
                             'state' => $order->fields['delivery_state'],
                             'country' => $order->fields['delivery_country'],
+                            'telephone' => $order->fields['delivery_telephone'],
+                            'fax' => $order->fields['delivery_fax'],
                             'format_id' => $order->fields['delivery_address_format_id']);
 
     if (empty($this->delivery['name']) && empty($this->delivery['street_address'])) {
@@ -162,6 +166,8 @@ class order extends base {
                            'postcode' => $order->fields['billing_postcode'],
                            'state' => $order->fields['billing_state'],
                            'country' => $order->fields['billing_country'],
+                           'telephone' => $order->fields['billing_telephone'],
+                           'fax' => $order->fields['billing_fax'],
                            'format_id' => $order->fields['billing_address_format_id']);
 
     $index = 0;
@@ -248,9 +254,12 @@ class order extends base {
 
     $this->content_type = $_SESSION['cart']->get_content_type();
 
+    // ->furikana
     $customer_address_query = "select c.customers_firstname, c.customers_lastname, c.customers_telephone,
+                                    c.customers_firstname_kana, c.customers_lastname_kana, 
                                     c.customers_email_address, ab.entry_company, ab.entry_street_address,
                                     ab.entry_suburb, ab.entry_postcode, ab.entry_city, ab.entry_zone_id,
+                                    ab.entry_telephone, ab.entry_fax,
                                     z.zone_name, co.countries_id, co.countries_name,
                                     co.countries_iso_code_2, co.countries_iso_code_3,
                                     co.address_format_id, ab.entry_state
@@ -260,12 +269,16 @@ class order extends base {
                                    where c.customers_id = '" . (int)$_SESSION['customer_id'] . "'
                                    and ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
                                    and c.customers_default_address_id = ab.address_book_id";
+    // <-furikana
 
     $customer_address = $db->Execute($customer_address_query);
 
+    // ->furikana
     $shipping_address_query = "select ab.entry_firstname, ab.entry_lastname, ab.entry_company,
+                                    ab.entry_firstname_kana, ab.entry_lastname_kana,
                                     ab.entry_street_address, ab.entry_suburb, ab.entry_postcode,
                                     ab.entry_city, ab.entry_zone_id, z.zone_name, ab.entry_country_id,
+                                    ab.entry_telephone, ab.entry_fax,
                                     c.countries_id, c.countries_name, c.countries_iso_code_2,
                                     c.countries_iso_code_3, c.address_format_id, ab.entry_state
                                    from " . TABLE_ADDRESS_BOOK . " ab
@@ -273,12 +286,16 @@ class order extends base {
                                    left join " . TABLE_COUNTRIES . " c on (ab.entry_country_id = c.countries_id)
                                    where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
                                    and ab.address_book_id = '" . (int)$_SESSION['sendto'] . "'";
+    // <-furikana
 
     $shipping_address = $db->Execute($shipping_address_query);
 
+    // ->furikana
     $billing_address_query = "select ab.entry_firstname, ab.entry_lastname, ab.entry_company,
+                                   ab.entry_firstname_kana, ab.entry_lastname_kana,
                                    ab.entry_street_address, ab.entry_suburb, ab.entry_postcode,
                                    ab.entry_city, ab.entry_zone_id, z.zone_name, ab.entry_country_id,
+                                   ab.entry_telephone, ab.entry_fax,
                                    c.countries_id, c.countries_name, c.countries_iso_code_2,
                                    c.countries_iso_code_3, c.address_format_id, ab.entry_state
                                   from " . TABLE_ADDRESS_BOOK . " ab
@@ -286,6 +303,7 @@ class order extends base {
                                   left join " . TABLE_COUNTRIES . " c on (ab.entry_country_id = c.countries_id)
                                   where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
                                   and ab.address_book_id = '" . (int)$_SESSION['billto'] . "'";
+    // <-furikana
 
     $billing_address = $db->Execute($billing_address_query);
 
@@ -294,46 +312,46 @@ class order extends base {
 
       // get tax zone info for logged-in visitors
       if (isset($_SESSION['customer_id']) && (int)$_SESSION['customer_id'] > 0) {
-          $taxCountryId = $taxZoneId = -1;
-          $tax_address_query = '';
-          switch (STORE_PRODUCT_TAX_BASIS) {
-              case 'Shipping':
-                  $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
-                                from " . TABLE_ADDRESS_BOOK . " ab
-                                left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
-                                where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
-                                and ab.address_book_id = '" . (int)($this->content_type == 'virtual' ? $_SESSION['billto'] : $_SESSION['sendto']) . "'";
-                  break;
-              case 'Billing':
-                  $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
+    $taxCountryId = $taxZoneId = -1;
+    $tax_address_query = '';
+    switch (STORE_PRODUCT_TAX_BASIS) {
+      case 'Shipping':
+      $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
+                              from " . TABLE_ADDRESS_BOOK . " ab
+                              left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
+                              where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+                              and ab.address_book_id = '" . (int)($this->content_type == 'virtual' ? $_SESSION['billto'] : $_SESSION['sendto']) . "'";
+      break;
+      case 'Billing':
+      $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
+                              from " . TABLE_ADDRESS_BOOK . " ab
+                              left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
+                              where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+                              and ab.address_book_id = '" . (int)$_SESSION['billto'] . "'";
+      break;
+      case 'Store':
+      if ($billing_address->fields['entry_zone_id'] == STORE_ZONE) {
+
+        $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
                                 from " . TABLE_ADDRESS_BOOK . " ab
                                 left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
                                 where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
                                 and ab.address_book_id = '" . (int)$_SESSION['billto'] . "'";
-                  break;
-              case 'Store':
-                  if ($billing_address->fields['entry_zone_id'] == STORE_ZONE) {
-
-                      $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
-                                  from " . TABLE_ADDRESS_BOOK . " ab
-                                  left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
-                                  where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
-                                  and ab.address_book_id = '" . (int)$_SESSION['billto'] . "'";
-                  } else {
-                      $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
-                                  from " . TABLE_ADDRESS_BOOK . " ab
-                                  left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
-                                  where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
-                                  and ab.address_book_id = '" . (int)($this->content_type == 'virtual' ? $_SESSION['billto'] : $_SESSION['sendto']) . "'";
-                  }
-          }
-          if ($tax_address_query != '') {
-              $tax_address = $db->Execute($tax_address_query);
-              if ($tax_address->recordCount() > 0) {
-                  $taxCountryId = $tax_address->fields['entry_country_id'];
-                  $taxZoneId = $tax_address->fields['entry_zone_id'];
-              }
-          }
+      } else {
+        $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
+                                from " . TABLE_ADDRESS_BOOK . " ab
+                                left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
+                                where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+                                and ab.address_book_id = '" . (int)($this->content_type == 'virtual' ? $_SESSION['billto'] : $_SESSION['sendto']) . "'";
+      }
+    }
+    if ($tax_address_query != '') {
+      $tax_address = $db->Execute($tax_address_query);
+      if ($tax_address->recordCount() > 0) {
+        $taxCountryId = $tax_address->fields['entry_country_id'];
+        $taxZoneId = $tax_address->fields['entry_zone_id'];
+      }
+    }
       }
 
     $class =& $_SESSION['payment'];
@@ -400,6 +418,10 @@ class order extends base {
 */
     $this->customer = array('firstname' => $customer_address->fields['customers_firstname'],
                             'lastname' => $customer_address->fields['customers_lastname'],
+                            // ->furikana
+                            'firstname_kana' => $customer_address->fields['customers_firstname_kana'],
+                            'lastname_kana' => $customer_address->fields['customers_lastname_kana'],
+                            // <-furikana
                             'company' => $customer_address->fields['entry_company'],
                             'street_address' => $customer_address->fields['entry_street_address'],
                             'suburb' => $customer_address->fields['entry_suburb'],
@@ -409,11 +431,16 @@ class order extends base {
                             'zone_id' => $customer_address->fields['entry_zone_id'],
                             'country' => array('id' => $customer_address->fields['countries_id'], 'title' => $customer_address->fields['countries_name'], 'iso_code_2' => $customer_address->fields['countries_iso_code_2'], 'iso_code_3' => $customer_address->fields['countries_iso_code_3']),
                             'format_id' => (int)$customer_address->fields['address_format_id'],
-                            'telephone' => $customer_address->fields['customers_telephone'],
+                            'telephone' => $customer_address->fields['entry_telephone'],
+                            'fax' => $customer_address->fields['entry_fax'],
                             'email_address' => $customer_address->fields['customers_email_address']);
 
     $this->delivery = array('firstname' => $shipping_address->fields['entry_firstname'],
                             'lastname' => $shipping_address->fields['entry_lastname'],
+                            // ->furikana
+                            'firstname_kana' => $shipping_address->fields['entry_firstname_kana'],
+                            'lastname_kana' => $shipping_address->fields['entry_lastname_kana'],
+                            // <-furikana
                             'company' => $shipping_address->fields['entry_company'],
                             'street_address' => $shipping_address->fields['entry_street_address'],
                             'suburb' => $shipping_address->fields['entry_suburb'],
@@ -423,10 +450,16 @@ class order extends base {
                             'zone_id' => $shipping_address->fields['entry_zone_id'],
                             'country' => array('id' => $shipping_address->fields['countries_id'], 'title' => $shipping_address->fields['countries_name'], 'iso_code_2' => $shipping_address->fields['countries_iso_code_2'], 'iso_code_3' => $shipping_address->fields['countries_iso_code_3']),
                             'country_id' => $shipping_address->fields['entry_country_id'],
+                            'telephone' => $shipping_address->fields['entry_telephone'],
+                            'fax' => $shipping_address->fields['entry_fax'],
                             'format_id' => (int)$shipping_address->fields['address_format_id']);
 
     $this->billing = array('firstname' => $billing_address->fields['entry_firstname'],
                            'lastname' => $billing_address->fields['entry_lastname'],
+                            // ->furikana
+                           'firstname_kana' => $billing_address->fields['entry_firstname_kana'],
+                           'lastname_kana' => $billing_address->fields['entry_lastname_kana'],
+                            // <-furikana
                            'company' => $billing_address->fields['entry_company'],
                            'street_address' => $billing_address->fields['entry_street_address'],
                            'suburb' => $billing_address->fields['entry_suburb'],
@@ -436,6 +469,8 @@ class order extends base {
                            'zone_id' => $billing_address->fields['entry_zone_id'],
                            'country' => array('id' => $billing_address->fields['countries_id'], 'title' => $billing_address->fields['countries_name'], 'iso_code_2' => $billing_address->fields['countries_iso_code_2'], 'iso_code_3' => $billing_address->fields['countries_iso_code_3']),
                            'country_id' => $billing_address->fields['entry_country_id'],
+                           'telephone' => $billing_address->fields['entry_telephone'],
+                           'fax' => $billing_address->fields['entry_fax'],
                            'format_id' => (int)$billing_address->fields['address_format_id']);
 
     $index = 0;
@@ -531,41 +566,41 @@ class order extends base {
       $this->notify('NOTIFY_ORDER_CART_EXTERNAL_TAX_HANDLING', array(), $index, $taxCountryId, $taxZoneId);
 
       if ($this->use_external_tax_handler_only == FALSE) {
-        /*********************************************
-         * Calculate taxes for this product
-         *********************************************/
-        $shown_price = (zen_add_tax($this->products[$index]['final_price'] * $this->products[$index]['qty'], $this->products[$index]['tax']))
-        + zen_add_tax($this->products[$index]['onetime_charges'], $this->products[$index]['tax']);
-        $this->info['subtotal'] += $shown_price;
-        $this->notify('NOTIFIY_ORDER_CART_SUBTOTAL_CALCULATE', array('shown_price'=>$shown_price));
-        // find product's tax rate and description
-        $products_tax = $this->products[$index]['tax'];
-        $products_tax_description = $this->products[$index]['tax_description'];
+      /*********************************************
+       * Calculate taxes for this product
+       *********************************************/
+      $shown_price = (zen_add_tax($this->products[$index]['final_price'] * $this->products[$index]['qty'], $this->products[$index]['tax']))
+      + zen_add_tax($this->products[$index]['onetime_charges'], $this->products[$index]['tax']);
+      $this->info['subtotal'] += $shown_price;
+      $this->notify('NOTIFIY_ORDER_CART_SUBTOTAL_CALCULATE', array('shown_price'=>$shown_price));
+      // find product's tax rate and description
+      $products_tax = $this->products[$index]['tax'];
+      $products_tax_description = $this->products[$index]['tax_description'];
 
-        if (DISPLAY_PRICE_WITH_TAX == 'true') {
-          // calculate the amount of tax "inc"luded in price (used if tax-in pricing is enabled)
-          $tax_add = $shown_price - ($shown_price / (($products_tax < 10) ? "1.0" . str_replace('.', '', $products_tax) : "1." . str_replace('.', '', $products_tax)));
-        } else {
-          // calculate the amount of tax for this product (assuming tax is NOT included in the price)
-  //        $tax_add = zen_round(($products_tax / 100) * $shown_price, $currencies->currencies[$this->info['currency']]['decimal_places']);
-          $tax_add = ($products_tax/100) * $shown_price;
-        }
-        $this->info['tax'] += $tax_add;
-        foreach ($taxRates as $taxDescription=>$taxRate)
+      if (DISPLAY_PRICE_WITH_TAX == 'true') {
+        // calculate the amount of tax "inc"luded in price (used if tax-in pricing is enabled)
+        $tax_add = $shown_price - ($shown_price / (($products_tax < 10) ? "1.0" . str_replace('.', '', $products_tax) : "1." . str_replace('.', '', $products_tax)));
+      } else {
+        // calculate the amount of tax for this product (assuming tax is NOT included in the price)
+//        $tax_add = zen_round(($products_tax / 100) * $shown_price, $currencies->currencies[$this->info['currency']]['decimal_places']);
+        $tax_add = ($products_tax/100) * $shown_price;
+      }
+      $this->info['tax'] += $tax_add;
+      foreach ($taxRates as $taxDescription=>$taxRate)
+      {
+        $taxAdd = zen_calculate_tax($this->products[$index]['final_price']*$this->products[$index]['qty'], $taxRate)
+                +  zen_calculate_tax($this->products[$index]['onetime_charges'], $taxRate);
+        if (isset($this->info['tax_groups'][$taxDescription]))
         {
-          $taxAdd = zen_calculate_tax($this->products[$index]['final_price']*$this->products[$index]['qty'], $taxRate)
-                  +  zen_calculate_tax($this->products[$index]['onetime_charges'], $taxRate);
-          if (isset($this->info['tax_groups'][$taxDescription]))
-          {
-            $this->info['tax_groups'][$taxDescription] += $taxAdd;
-          } else
-          {
-            $this->info['tax_groups'][$taxDescription] = $taxAdd;
-          }
+          $this->info['tax_groups'][$taxDescription] += $taxAdd;
+        } else
+        {
+          $this->info['tax_groups'][$taxDescription] = $taxAdd;
         }
-        /*********************************************
-         * END: Calculate taxes for this product
-         *********************************************/
+      }
+      /*********************************************
+       * END: Calculate taxes for this product
+       *********************************************/
     }
       $index++;
     }
@@ -625,6 +660,9 @@ class order extends base {
 
     $sql_data_array = array('customers_id' => $_SESSION['customer_id'],
                             'customers_name' => $this->customer['firstname'] . ' ' . $this->customer['lastname'],
+                            // ->furikana
+                            'customers_name_kana' => $this->customer['firstname_kana'] . ' ' . $this->customer['lastname_kana'],
+                            // <-furikana
                             'customers_company' => $this->customer['company'],
                             'customers_street_address' => $this->customer['street_address'],
                             'customers_suburb' => $this->customer['suburb'],
@@ -633,9 +671,13 @@ class order extends base {
                             'customers_state' => $this->customer['state'],
                             'customers_country' => $this->customer['country']['title'],
                             'customers_telephone' => $this->customer['telephone'],
+                            'customers_fax' => $this->customer['fax'],
                             'customers_email_address' => $this->customer['email_address'],
                             'customers_address_format_id' => $this->customer['format_id'],
                             'delivery_name' => $this->delivery['firstname'] . ' ' . $this->delivery['lastname'],
+                            // ->furikana
+                            'delivery_name_kana' => $this->delivery['firstname_kana'] . ' ' . $this->delivery['lastname_kana'],
+                            // <-furikana
                             'delivery_company' => $this->delivery['company'],
                             'delivery_street_address' => $this->delivery['street_address'],
                             'delivery_suburb' => $this->delivery['suburb'],
@@ -643,8 +685,13 @@ class order extends base {
                             'delivery_postcode' => $this->delivery['postcode'],
                             'delivery_state' => $this->delivery['state'],
                             'delivery_country' => $this->delivery['country']['title'],
+                            'delivery_telephone' => $this->delivery['telephone'],
+                            'delivery_fax' => $this->delivery['fax'],
                             'delivery_address_format_id' => $this->delivery['format_id'],
                             'billing_name' => $this->billing['firstname'] . ' ' . $this->billing['lastname'],
+                            // ->furikana
+                            'billing_name_kana' => $this->billing['firstname_kana'] . ' ' . $this->billing['lastname_kana'],
+                            // <-furikana
                             'billing_company' => $this->billing['company'],
                             'billing_street_address' => $this->billing['street_address'],
                             'billing_suburb' => $this->billing['suburb'],
@@ -652,6 +699,8 @@ class order extends base {
                             'billing_postcode' => $this->billing['postcode'],
                             'billing_state' => $this->billing['state'],
                             'billing_country' => $this->billing['country']['title'],
+                            'billing_telephone' => $this->billing['telephone'],
+                            'billing_fax' => $this->billing['fax'],
                             'billing_address_format_id' => $this->billing['format_id'],
                             'payment_method' => (($this->info['payment_module_code'] == '' and $this->info['payment_method'] == '') ? PAYMENT_METHOD_GV : $this->info['payment_method']),
                             'payment_module_code' => (($this->info['payment_module_code'] == '' and $this->info['payment_method'] == '') ? PAYMENT_MODULE_GV : $this->info['payment_module_code']),
