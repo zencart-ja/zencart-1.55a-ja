@@ -47,15 +47,23 @@
     background-color: #d7d6cc;
 }
 .navbar-nav li>a.dropdown-toggle {
-    font-size: 1.2em;
+    font-size: 1.3em;
     color: #333;
 }
 @media (min-width: 768px) {
     .navbar-nav>li>a {
-        padding-top: 5px;
-        padding-bottom: 5px;
+        padding-top: 10px;
+        padding-bottom: 10px;
     }
     .navbar {
         min-height: 30px;
     }
+}
+
+/* zencart-ja */
+html {font-size:100.01%}
+body {font-size:82.5%;}
+table {font:inherit;}
+ul.nde-menu-system li ul li{
+width:180px;
 }

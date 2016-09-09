@@ -6,7 +6,7 @@
  * @copyright Copyright 2003-2016 Zen Cart Development Team
  * @copyright Portions Copyright 2003 osCommerce
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: Author: zcwilt Fri Apr 15 Modified in v1.5.5 $
+ * @version $Id: Author: DrByte  Fri Jan 1 12:23:19 2016 -0500 Modified in v1.5.5 $
  */
 // This should be first line of the script:
 $zco_notifier->notify('NOTIFY_HEADER_START_ACCOUNT_EDIT');
@@ -22,6 +22,12 @@ if (isset($_POST['action']) && ($_POST['action'] == 'process')) {
   $firstname = zen_db_prepare_input($_POST['firstname']);
   $lastname = zen_db_prepare_input($_POST['lastname']);
   $nick = (!empty($_POST['nick']) ? zen_db_prepare_input($_POST['nick']) : '');
+  // ->furikana
+  if (FURIKANA_NESESSARY) {
+    $firstname_kana = zen_db_prepare_input($_POST['firstname_kana']);
+    $lastname_kana = zen_db_prepare_input($_POST['lastname_kana']);
+  }
+  // <-furikana
   if (ACCOUNT_DOB == 'true') $dob = (empty($_POST['dob']) ? zen_db_prepare_input('0001-01-01 00:00:00') : zen_db_prepare_input($_POST['dob']));
   $email_address = zen_db_prepare_input($_POST['email_address']);
   $telephone = zen_db_prepare_input($_POST['telephone']);
@@ -48,6 +54,20 @@ if (isset($_POST['action']) && ($_POST['action'] == 'process')) {
     $error = true;
     $messageStack->add('account_edit', ENTRY_LAST_NAME_ERROR);
   }
+
+  // ->furikana
+  if (FURIKANA_NESESSARY) {
+    if (strlen($firstname_kana) < ENTRY_FIRST_NAME_MIN_LENGTH) {
+      $error = true;
+      $messageStack->add('account_edit', ENTRY_FIRST_NAME_KANA_ERROR);
+    }
+
+    if (strlen($lastname_kana) < ENTRY_LAST_NAME_MIN_LENGTH) {
+      $error = true;
+      $messageStack->add('account_edit', ENTRY_LAST_NAME_KANA_ERROR);
+    }
+  }
+  // <-furikana
 
   if (ACCOUNT_DOB == 'true') {
     if (ENTRY_DOB_MIN_LENGTH > 0 or !empty($_POST['dob'])) {
@@ -80,7 +100,7 @@ if (isset($_POST['action']) && ($_POST['action'] == 'process')) {
   if ($check_email->fields['total'] > 0) {
     $error = true;
     $messageStack->add('account_edit', ENTRY_EMAIL_ADDRESS_ERROR_EXISTS);
-  }
+    }
 
   // check external hook for duplicate email address, so we can reject the change if duplicates aren't allowed externally
   // (the observers should set any messageStack output as needed)
@@ -101,19 +121,34 @@ if (isset($_POST['action']) && ($_POST['action'] == 'process')) {
     $zco_notifier->notify('NOTIFY_NICK_UPDATE_EMAIL_ADDRESS', $nick, $db->prepareInput($email_address));
 
     // build array of data to store the requested changes
-    $sql_data_array = array(array('fieldName'=>'customers_firstname', 'value'=>$firstname, 'type'=>'stringIgnoreNull'),
-                            array('fieldName'=>'customers_lastname', 'value'=>$lastname, 'type'=>'stringIgnoreNull'),
-                            array('fieldName'=>'customers_email_address', 'value'=>$email_address, 'type'=>'stringIgnoreNull'),
-                            array('fieldName'=>'customers_telephone', 'value'=>$telephone, 'type'=>'stringIgnoreNull'),
-                            array('fieldName'=>'customers_fax', 'value'=>$fax, 'type'=>'stringIgnoreNull'),
-                            array('fieldName'=>'customers_email_format', 'value'=>$email_format, 'type'=>'stringIgnoreNull')
+    // ->furikana
+    if (FURIKANA_NESESSARY) {
+      $sql_data_array = array(array('fieldName'=>'customers_firstname', 'value'=>$firstname, 'type'=>'string'),
+                              array('fieldName'=>'customers_lastname', 'value'=>$lastname, 'type'=>'string'),
+                              array('fieldName'=>'customers_firstname_kana', 'value'=>$firstname_kana, 'type'=>'string'),
+                              array('fieldName'=>'customers_lastname_kana', 'value'=>$lastname_kana, 'type'=>'string'),
+                              array('fieldName'=>'customers_email_address', 'value'=>$email_address, 'type'=>'string'),
+                              array('fieldName'=>'customers_telephone', 'value'=>$telephone, 'type'=>'string'),
+                              array('fieldName'=>'customers_fax', 'value'=>$fax, 'type'=>'string'),
+                              array('fieldName'=>'customers_email_format', 'value'=>$email_format, 'type'=>'string')
+      );
+    }
+    else {
+    $sql_data_array = array(array('fieldName'=>'customers_firstname', 'value'=>$firstname, 'type'=>'string'),
+                            array('fieldName'=>'customers_lastname', 'value'=>$lastname, 'type'=>'string'),
+                            array('fieldName'=>'customers_email_address', 'value'=>$email_address, 'type'=>'string'),
+                            array('fieldName'=>'customers_telephone', 'value'=>$telephone, 'type'=>'string'),
+                            array('fieldName'=>'customers_fax', 'value'=>$fax, 'type'=>'string'),
+                            array('fieldName'=>'customers_email_format', 'value'=>$email_format, 'type'=>'string')
     );
+    }
+    // <-furikana
 
     if ((CUSTOMERS_REFERRAL_STATUS == '2' and $customers_referral != '')) {
-      $sql_data_array[] = array('fieldName'=>'customers_referral', 'value'=>$customers_referral, 'type'=>'stringIgnoreNull');
+      $sql_data_array[] = array('fieldName'=>'customers_referral', 'value'=>$customers_referral, 'type'=>'string');
     }
     if (ACCOUNT_GENDER == 'true') {
-      $sql_data_array[] = array('fieldName'=>'customers_gender', 'value'=>$gender, 'type'=>'stringIgnoreNull');
+      $sql_data_array[] = array('fieldName'=>'customers_gender', 'value'=>$gender, 'type'=>'string');
     }
     if (ACCOUNT_DOB == 'true') {
       if ($dob == '0001-01-01 00:00:00' or $_POST['dob'] == '') {
@@ -138,8 +173,17 @@ if (isset($_POST['action']) && ($_POST['action'] == 'process')) {
     $where_clause = "customers_id = :customersID AND address_book_id = :customerDefaultAddressID";
     $where_clause = $db->bindVars($where_clause, ':customersID', $_SESSION['customer_id'], 'integer');
     $where_clause = $db->bindVars($where_clause, ':customerDefaultAddressID', $_SESSION['customer_default_address_id'], 'integer');
-    $sql_data_array = array(array('fieldName'=>'entry_firstname', 'value'=>$firstname, 'type'=>'stringIgnoreNull'),
+    // ->furikana
+    if (FURIKANA_NESESSARY) {
+      $sql_data_array = array(array('fieldName'=>'entry_firstname', 'value'=>$firstname, 'type'=>'string'),
+                              array('fieldName'=>'entry_lastname', 'value'=>$lastname, 'type'=>'string'),
+                              array('fieldName'=>'entry_firstname_kana', 'value'=>$firstname_kana, 'type'=>'string'),
+                              array('fieldName'=>'entry_lastname_kana', 'value'=>$lastname_kana, 'type'=>'string'));
+    }
+    else {
+    $sql_data_array = array(array('fieldName'=>'entry_firstname', 'value'=>$firstname, 'type'=>'string'),
     array('fieldName'=>'entry_lastname', 'value'=>$lastname, 'type'=>'string'));
+    }
 
     $db->perform(TABLE_ADDRESS_BOOK, $sql_data_array, 'update', $where_clause);
 
@@ -155,11 +199,23 @@ if (isset($_POST['action']) && ($_POST['action'] == 'process')) {
   }
 }
 
+    // ->furikana
+    if (FURIKANA_NESESSARY) {
+      $account_query = "SELECT customers_gender, customers_firstname, customers_lastname,
+                               customers_firstname_kana, customers_lastname_kana,
+                               customers_dob, customers_email_address, customers_telephone,
+                               customers_fax, customers_email_format, customers_referral
+                        FROM   " . TABLE_CUSTOMERS . "
+                        WHERE  customers_id = :customersID";
+    }
+    else {
 $account_query = "SELECT customers_gender, customers_firstname, customers_lastname,
-                         customers_dob, customers_email_address, customers_telephone, customers_nick,
+                         customers_dob, customers_email_address, customers_telephone,
                          customers_fax, customers_email_format, customers_referral
                   FROM   " . TABLE_CUSTOMERS . "
                   WHERE  customers_id = :customersID";
+    }
+    // <-furikana
 
 $account_query = $db->bindVars($account_query, ':customersID', $_SESSION['customer_id'], 'integer');
 $account = $db->Execute($account_query);
@@ -194,3 +250,4 @@ $breadcrumb->add(NAVBAR_TITLE_2);
 
 // This should be last line of the script:
 $zco_notifier->notify('NOTIFY_HEADER_END_ACCOUNT_EDIT');
+?>

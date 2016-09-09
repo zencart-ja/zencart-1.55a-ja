@@ -502,6 +502,10 @@ function couponpopupWindow(url) {
                 <td class="main"><a href="tel:<?php echo $order->customer['telephone']; ?>"><?php echo $order->customer['telephone']; ?></a></td>
               </tr>
               <tr>
+                <td class="main"><strong><?php echo ENTRY_FAX_NUMBER; ?></strong></td>
+                <td class="main"><?php echo $order->customer['fax']; ?></td>
+              </tr>
+              <tr>
                 <td class="main"><strong><?php echo ENTRY_EMAIL_ADDRESS; ?></strong></td>
                 <td class="main"><?php echo '<a href="mailto:' . $order->customer['email_address'] . '">' . $order->customer['email_address'] . '</a>'; ?></td>
               </tr>
@@ -519,6 +523,14 @@ function couponpopupWindow(url) {
                 <td class="main"><strong><?php echo ENTRY_CUSTOMER; ?></strong></td>
                 <td class="main"><?php echo '<a href="' . zen_href_link(FILENAME_CUSTOMERS, 'search=' . $order->customer['email_address'], 'SSL') . '" . >' . TEXT_CUSTOMER_LOOKUP . '</a>'; ?></td>
               </tr>
+              <tr>
+                <td class="main"><strong><?php echo ENTRY_TELEPHONE_NUMBER; ?></strong></td>
+                <td class="main"><?php echo $order->delivery['telephone']; ?></td>
+              </tr>
+              <tr>
+                <td class="main"><strong><?php echo ENTRY_FAX_NUMBER; ?></strong></td>
+                <td class="main"><?php echo $order->delivery['fax']; ?></td>
+              </tr>
             </table></td>
             <td valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="2">
               <tr>
@@ -530,6 +542,13 @@ function couponpopupWindow(url) {
               <tr>
                 <td class="main" valign="top"><strong><?php echo ENTRY_BILLING_ADDRESS; ?></strong></td>
                 <td class="main"><?php echo zen_address_format($order->billing['format_id'], $order->billing, 1, '', '<br />'); ?></td>
+              <tr>
+                <td class="main"><strong><?php echo ENTRY_TELEPHONE_NUMBER; ?></strong></td>
+                <td class="main"><?php echo $order->billing['telephone']; ?></td>
+              </tr>
+              <tr>
+                <td class="main"><strong><?php echo ENTRY_FAX_NUMBER; ?></strong></td>
+                <td class="main"><?php echo $order->billing['fax']; ?></td>
               </tr>
             </table></td>
           </tr>

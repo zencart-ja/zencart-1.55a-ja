@@ -1744,6 +1744,7 @@ class shoppingCart extends base {
     if ($this->display_debug_messages) $messageStack->add_session('header', 'FUNCTION ' . __FUNCTION__, 'caution');
 
     for ($i=0, $n=sizeof($_POST['products_id']); $i<$n; $i++) {
+      $_POST['cart_quantity'][$i] = mb_convert_kana($_POST['cart_quantity'][$i], 'n');
       $adjust_max= 'false';
       if ($_POST['cart_quantity'][$i] == '') {
         $_POST['cart_quantity'][$i] = 0;
@@ -1868,7 +1869,7 @@ class shoppingCart extends base {
       $add_max = zen_get_products_quantity_order_max($_POST['products_id']);
       $cart_qty = $this->in_cart_mixed($_POST['products_id']);
       if ($this->display_debug_messages) $messageStack->add_session('header', 'B: FUNCTION ' . __FUNCTION__ . ' Products_id: ' . $_POST['products_id'] . ' cart_qty: ' . $cart_qty . ' $_POST[cart_quantity]: ' . $_POST['cart_quantity'] . ' <br>', 'caution');
-      $new_qty = $_POST['cart_quantity'];
+      $new_qty = mb_convert_kana($_POST['cart_quantity'], 'n');
 
       $new_qty = $this->adjust_quantity($new_qty, $_POST['products_id'], 'shopping_cart');
 
@@ -2041,6 +2042,7 @@ class shoppingCart extends base {
 //echo '<pre>'; echo var_dump($_POST['products_id']); echo '</pre>';
       while ( list( $key, $val ) = each($_POST['products_id']) ) {
         $prodId = preg_replace('/[^0-9a-f:.]/', '', $key);
+        $val = mb_convert_kana($val,'n');
         if (is_numeric($val) && $val > 0) {
           $adjust_max = false;
           $qty = $val;

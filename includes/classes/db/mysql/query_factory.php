@@ -8,7 +8,7 @@
  * @copyright Portions Copyright 2003 osCommerce
  * @copyright Portions adapted from http://www.data-diggers.com/
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: Author: zcwuilt Fri Apr 15 Modified in v1.5.5 $
+ * @version $Id: Author: DrByte  Sun Feb 14 17:28:50 2016 -0500 Modified in v1.5.5 $
  */
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -49,6 +49,7 @@ class queryFactory extends base {
   }
 
   function connect($zf_host, $zf_user, $zf_password, $zf_database, $zf_pconnect = 'false', $dieOnErrors = false, $options = array()) {
+    if(substr(PHP_OS,0,3) === 'WIN' && $zf_host==='localhost') $zf_host = '127.0.0.1';
     $this->database = $zf_database;
     $this->user = $zf_user;
     $this->host = $zf_host;

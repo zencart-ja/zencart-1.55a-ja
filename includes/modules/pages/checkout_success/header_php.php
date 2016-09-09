@@ -33,7 +33,9 @@ if (isset($_GET['action']) && ($_GET['action'] == 'update')) {
   if ($notify_string == 'action=notify&') {
       zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
   } else {
-    zen_redirect(zen_href_link(FILENAME_DEFAULT, $notify_string));
+// -> for jp : CHANGE "FILENAME_DEFAULT" to "FILENAME_ACCOUNT_NOTIFICATIONS"
+    zen_redirect(zen_href_link(FILENAME_ACCOUNT_NOTIFICATIONS, $notify_string));
+// <- for jp : CHANGE "FILENAME_DEFAULT" to "FILENAME_ACCOUNT_NOTIFICATIONS"
   }
 }
 
@@ -123,8 +125,8 @@ $gv_result = $db->Execute($gv_query);
 
 if (!$gv_result->EOF && $gv_result->fields['amount'] > 0 ) {
   $customer_has_gv_balance = true;
-  $customer_gv_balance = $currencies->format($gv_result->fields['amount']);
-}
+    $customer_gv_balance = $currencies->format($gv_result->fields['amount']);
+  }
 
 // include template specific file name defines
 $define_page = zen_get_file_directory(DIR_WS_LANGUAGES . $_SESSION['language'] . '/html_includes/', FILENAME_DEFINE_CHECKOUT_SUCCESS, 'false');

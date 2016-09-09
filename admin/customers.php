@@ -95,9 +95,13 @@
       case 'update':
         $customers_firstname = zen_db_prepare_input(zen_sanitize_string($_POST['customers_firstname']));
         $customers_lastname = zen_db_prepare_input(zen_sanitize_string($_POST['customers_lastname']));
+		// ->furikana
+        $customers_firstname_kana = zen_db_prepare_input($_POST['customers_firstname_kana']);
+        $customers_lastname_kana = zen_db_prepare_input($_POST['customers_lastname_kana']);
+		// <-furikana
         $customers_email_address = zen_db_prepare_input($_POST['customers_email_address']);
-        $customers_telephone = zen_db_prepare_input($_POST['customers_telephone']);
-        $customers_fax = zen_db_prepare_input($_POST['customers_fax']);
+        $entry_telephone = zen_db_prepare_input($_POST['entry_telephone']);
+        $entry_fax = zen_db_prepare_input($_POST['entry_fax']);
         $customers_newsletter = zen_db_prepare_input($_POST['customers_newsletter']);
         $customers_group_pricing = (int)zen_db_prepare_input($_POST['customers_group_pricing']);
         $customers_email_format = zen_db_prepare_input($_POST['customers_email_format']);
@@ -229,7 +233,7 @@
          }
       }
 
-      if (strlen($customers_telephone) < ENTRY_TELEPHONE_MIN_LENGTH) {
+      if (strlen($entry_telephone) < ENTRY_TELEPHONE_MIN_LENGTH) {
         $error = true;
         $entry_telephone_error = true;
       } else {
@@ -249,7 +253,7 @@
       }
 
       if ($error == false) {
-
+        // ->furikana
         $sql_data_array = array(array('fieldName'=>'customers_firstname', 'value'=>$customers_firstname, 'type'=>'stringIgnoreNull'),
                                 array('fieldName'=>'customers_lastname', 'value'=>$customers_lastname, 'type'=>'stringIgnoreNull'),
                                 array('fieldName'=>'customers_email_address', 'value'=>$customers_email_address, 'type'=>'stringIgnoreNull'),
@@ -261,6 +265,7 @@
                                 array('fieldName'=>'customers_authorization', 'value'=>$customers_authorization, 'type'=>'stringIgnoreNull'),
                                 array('fieldName'=>'customers_referral', 'value'=>$customers_referral, 'type'=>'stringIgnoreNull'),
         );
+        // <-furikana
 
         if (ACCOUNT_GENDER == 'true') $sql_data_array[] = array('fieldName'=>'customers_gender', 'value'=>$customers_gender, 'type'=>'stringIgnoreNull');
         if (ACCOUNT_DOB == 'true')  $sql_data_array[] = array('fieldName'=>'customers_dob', 'value'=>($customers_dob == '0001-01-01 00:00:00' ? '0001-01-01 00:00:00' : zen_date_raw($customers_dob)), 'type'=>'date');
@@ -405,6 +410,8 @@
         zen_redirect(zen_href_link(FILENAME_CUSTOMERS, zen_get_all_get_params(array('cID', 'action')), 'NONSSL'));
         break;
       default:
+        // ->furikana
+        if (FURIKANA_NESESSARY)
         $customers = $db->Execute("select c.customers_id, c.customers_gender, c.customers_firstname,
                                           c.customers_lastname, c.customers_dob, c.customers_email_address,
                                           a.entry_company, a.entry_street_address, a.entry_suburb,
@@ -417,6 +424,7 @@
                                   on c.customers_default_address_id = a.address_book_id
                                   where a.customers_id = c.customers_id
                                   and c.customers_id = '" . (int)$customers_id . "'");
+        // <-furikana
 
         $cInfo = new objectInfo($customers->fields);
     }
@@ -442,13 +450,23 @@ function check_form() {
 
   var customers_firstname = document.customers.customers_firstname.value;
   var customers_lastname = document.customers.customers_lastname.value;
+<?php
+  // ->furikana
+  if (FURIKANA_NESESSARY) {
+?>
+  var customers_firstname_kana = document.customers.customers_firstname_kana.value;
+  var customers_lastname_kana = document.customers.customers_lastname_kana.value;
+<?php
+  }
+  // <-furikana
+?>
 <?php if (ACCOUNT_COMPANY == 'true') echo 'var entry_company = document.customers.entry_company.value;' . "\n"; ?>
 <?php if (ACCOUNT_DOB == 'true') echo 'var customers_dob = document.customers.customers_dob.value;' . "\n"; ?>
   var customers_email_address = document.customers.customers_email_address.value;
   var entry_street_address = document.customers.entry_street_address.value;
   var entry_postcode = document.customers.entry_postcode.value;
   var entry_city = document.customers.entry_city.value;
-  var customers_telephone = document.customers.customers_telephone.value;
+  var entry_telephone = document.customers.entry_telephone.value;
 
 <?php if (ACCOUNT_GENDER == 'true') { ?>
   if (document.customers.customers_gender[0].checked || document.customers.customers_gender[1].checked) {
@@ -467,6 +485,23 @@ function check_form() {
     error_message = error_message + "<?php echo JS_LAST_NAME; ?>";
     error = 1;
   }
+<?php
+  // ->furikana
+  if (FURIKANA_NESESSARY) {
+?>
+  if (customers_firstname_kana == "" || customers_firstname_kana.length < <?php echo ENTRY_FIRST_NAME_MIN_LENGTH; ?>) {
+    error_message = error_message + "<?php echo JS_FIRST_NAME_KANA; ?>";
+    error = 1;
+  }
+
+  if (customers_lastname_kana == "" || customers_lastname_kana.length < <?php echo ENTRY_LAST_NAME_MIN_LENGTH; ?>) {
+    error_message = error_message + "<?php echo JS_LAST_NAME_KANA; ?>";
+    error = 1;
+  }
+<?php
+  }
+  // ->furikana
+?>
 
 <?php if (ACCOUNT_DOB == 'true' && ENTRY_DOB_MIN_LENGTH !='') { ?>
   if (customers_dob == "" || customers_dob.length < <?php echo ENTRY_DOB_MIN_LENGTH; ?>) {
@@ -516,7 +551,7 @@ function check_form() {
   }
 
   minTelephoneLength = <?php echo (int)ENTRY_TELEPHONE_MIN_LENGTH; ?>;
-  if (minTelephoneLength > 0 && customers_telephone.length < minTelephoneLength) {
+  if (minTelephoneLength > 0 && entry_telephone.length < minTelephoneLength) {
     error_message = error_message + "<?php echo JS_TELEPHONE; ?>";
     error = 1;
   }
@@ -642,6 +677,44 @@ function check_form() {
 ?></td>
           </tr>
 <?php
+  // ->furikana
+  if (FURIKANA_NESESSARY) {
+?>
+          <tr>
+            <td class="main"><?php echo ENTRY_FIRST_NAME_KANA; ?></td>
+            <td class="main">
+<?php
+  if ($error == true) {
+    if ($entry_firstname_kana_error == true) {
+      echo zen_draw_input_field('customers_firstname_kana', $cInfo->customers_firstname_kana, zen_set_field_length(TABLE_CUSTOMERS, 'customers_firstname_kana', 50)) . '&nbsp;' . ENTRY_FIRST_NAME_KANA_ERROR;
+    } else {
+      echo $cInfo->customers_firstname_kana . zen_draw_hidden_field('customers_firstname_kana');
+    }
+  } else {
+    echo zen_draw_input_field('customers_firstname_kana', $cInfo->customers_firstname_kana, zen_set_field_length(TABLE_CUSTOMERS, 'customers_firstname_kana', 50), true);
+  }
+?></td>
+          </tr>
+          <tr>
+            <td class="main"><?php echo ENTRY_LAST_NAME_KANA; ?></td>
+            <td class="main">
+<?php
+  if ($error == true) {
+    if ($entry_lastname_kana_error == true) {
+      echo zen_draw_input_field('customers_lastname_kana', $cInfo->customers_lastname_kana, zen_set_field_length(TABLE_CUSTOMERS, 'customers_lastname_kana', 50)) . '&nbsp;' . ENTRY_LAST_NAME_KANA_ERROR;
+    } else {
+      echo $cInfo->customers_lastname_kana . zen_draw_hidden_field('customers_lastname_kana');
+    }
+  } else {
+    echo zen_draw_input_field('customers_lastname_kana', $cInfo->customers_lastname_kana, zen_set_field_length(TABLE_CUSTOMERS, 'customers_lastname_kana', 50), true);
+  }
+?></td>
+          </tr>
+<?php
+  }
+?>
+
+<?php
     if (ACCOUNT_DOB == 'true') {
 ?>
           <tr>
@@ -724,41 +797,21 @@ function check_form() {
       <tr>
         <td class="formArea"><table border="0" cellspacing="2" cellpadding="2">
           <tr>
-            <td class="main"><?php echo ENTRY_STREET_ADDRESS; ?></td>
+            <td class="main"><?php echo ENTRY_COUNTRY; ?></td>
             <td class="main">
 <?php
   if ($error == true) {
-    if ($entry_street_address_error == true) {
-      echo zen_draw_input_field('entry_street_address', htmlspecialchars($cInfo->entry_street_address, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_street_address', 50)) . '&nbsp;' . ENTRY_STREET_ADDRESS_ERROR;
+    if ($entry_country_error == true) {
+      echo zen_draw_pull_down_menu('entry_country_id', zen_get_countries(), $cInfo->entry_country_id) . '&nbsp;' . ENTRY_COUNTRY_ERROR;
     } else {
-      echo $cInfo->entry_street_address . zen_draw_hidden_field('entry_street_address');
+      echo zen_get_country_name($cInfo->entry_country_id) . zen_draw_hidden_field('entry_country_id');
     }
   } else {
-    echo zen_draw_input_field('entry_street_address', htmlspecialchars($cInfo->entry_street_address, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_street_address', 50), true);
+    echo zen_draw_pull_down_menu('entry_country_id', zen_get_countries(), $cInfo->entry_country_id);
   }
 ?></td>
           </tr>
-<?php
-    if (ACCOUNT_SUBURB == 'true') {
-?>
-          <tr>
-            <td class="main"><?php echo ENTRY_SUBURB; ?></td>
-            <td class="main">
-<?php
-    if ($error == true) {
-      if ($entry_suburb_error == true) {
-        echo zen_draw_input_field('suburb', htmlspecialchars($cInfo->entry_suburb, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_suburb', 50)) . '&nbsp;' . ENTRY_SUBURB_ERROR;
-      } else {
-        echo $cInfo->entry_suburb . zen_draw_hidden_field('entry_suburb');
-      }
-    } else {
-      echo zen_draw_input_field('entry_suburb', htmlspecialchars($cInfo->entry_suburb, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_suburb', 50));
-    }
-?></td>
           </tr>
-<?php
-    }
-?>
           <tr>
             <td class="main"><?php echo ENTRY_POST_CODE; ?></td>
             <td class="main">
@@ -771,21 +824,6 @@ function check_form() {
     }
   } else {
     echo zen_draw_input_field('entry_postcode', htmlspecialchars($cInfo->entry_postcode, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_postcode', 10), true);
-  }
-?></td>
-          </tr>
-          <tr>
-            <td class="main"><?php echo ENTRY_CITY; ?></td>
-            <td class="main">
-<?php
-  if ($error == true) {
-    if ($entry_city_error == true) {
-      echo zen_draw_input_field('entry_city', htmlspecialchars($cInfo->entry_city, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_city', 50)) . '&nbsp;' . ENTRY_CITY_ERROR;
-    } else {
-      echo $cInfo->entry_city . zen_draw_hidden_field('entry_city');
-    }
-  } else {
-    echo zen_draw_input_field('entry_city', htmlspecialchars($cInfo->entry_city, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_city', 50), true);
   }
 ?></td>
           </tr>
@@ -827,20 +865,56 @@ function check_form() {
     }
 ?>
           <tr>
-            <td class="main"><?php echo ENTRY_COUNTRY; ?></td>
+            <td class="main"><?php echo ENTRY_CITY; ?></td>
             <td class="main">
 <?php
   if ($error == true) {
-    if ($entry_country_error == true) {
-      echo zen_draw_pull_down_menu('entry_country_id', zen_get_countries(), $cInfo->entry_country_id) . '&nbsp;' . ENTRY_COUNTRY_ERROR;
+    if ($entry_city_error == true) {
+      echo zen_draw_input_field('entry_city', htmlspecialchars($cInfo->entry_city, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_city', 50)) . '&nbsp;' . ENTRY_CITY_ERROR;
     } else {
-      echo zen_get_country_name($cInfo->entry_country_id) . zen_draw_hidden_field('entry_country_id');
+      echo $cInfo->entry_city . zen_draw_hidden_field('entry_city');
     }
   } else {
-    echo zen_draw_pull_down_menu('entry_country_id', zen_get_countries(), $cInfo->entry_country_id);
+    echo zen_draw_input_field('entry_city', htmlspecialchars($cInfo->entry_city, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_city', 50), true);
   }
 ?></td>
           </tr>
+          <tr>
+            <td class="main"><?php echo ENTRY_STREET_ADDRESS; ?></td>
+            <td class="main">
+<?php
+  if ($error == true) {
+    if ($entry_street_address_error == true) {
+      echo zen_draw_input_field('entry_street_address', htmlspecialchars($cInfo->entry_street_address, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_street_address', 50)) . '&nbsp;' . ENTRY_STREET_ADDRESS_ERROR;
+    } else {
+      echo $cInfo->entry_street_address . zen_draw_hidden_field('entry_street_address');
+    }
+  } else {
+    echo zen_draw_input_field('entry_street_address', htmlspecialchars($cInfo->entry_street_address, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_street_address', 50), true);
+  }
+?></td>
+          </tr>
+<?php
+    if (ACCOUNT_SUBURB == 'true') {
+?>
+          <tr>
+            <td class="main"><?php echo ENTRY_SUBURB; ?></td>
+            <td class="main">
+<?php
+    if ($error == true) {
+      if ($entry_suburb_error == true) {
+        echo zen_draw_input_field('suburb', htmlspecialchars($cInfo->entry_suburb, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_suburb', 50)) . '&nbsp;' . ENTRY_SUBURB_ERROR;
+      } else {
+        echo $cInfo->entry_suburb . zen_draw_hidden_field('entry_suburb');
+      }
+    } else {
+      echo zen_draw_input_field('entry_suburb', htmlspecialchars($cInfo->entry_suburb, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_suburb', 50));
+    }
+?></td>
+          </tr>
+<?php
+    }
+?>
         </table></td>
       </tr>
       <tr>
@@ -857,12 +931,12 @@ function check_form() {
 <?php
   if ($error == true) {
     if ($entry_telephone_error == true) {
-      echo zen_draw_input_field('customers_telephone', htmlspecialchars($cInfo->customers_telephone, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_CUSTOMERS, 'customers_telephone', 15)) . '&nbsp;' . ENTRY_TELEPHONE_NUMBER_ERROR;
+      echo zen_draw_input_field('entry_telephone', htmlspecialchars($cInfo->entry_telephone, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_telephone', 15)) . '&nbsp;' . ENTRY_TELEPHONE_NUMBER_ERROR;
     } else {
-      echo $cInfo->customers_telephone . zen_draw_hidden_field('customers_telephone');
+      echo $cInfo->entry_telephone . zen_draw_hidden_field('entry_telephone');
     }
   } else {
-    echo zen_draw_input_field('customers_telephone', htmlspecialchars($cInfo->customers_telephone, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_CUSTOMERS, 'customers_telephone', 15), true);
+    echo zen_draw_input_field('entry_telephone', htmlspecialchars($cInfo->entry_telephone, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_telephone', 15), true);
   }
 ?></td>
           </tr>
@@ -874,9 +948,9 @@ function check_form() {
             <td class="main">
 <?php
   if ($processed == true) {
-    echo $cInfo->customers_fax . zen_draw_hidden_field('customers_fax');
+    echo $cInfo->entry_fax . zen_draw_hidden_field('entry_fax');
   } else {
-    echo zen_draw_input_field('customers_fax', htmlspecialchars($cInfo->customers_fax, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_CUSTOMERS, 'customers_fax', 15));
+    echo zen_draw_input_field('entry_fax', htmlspecialchars($cInfo->entry_fax, ENT_COMPAT, CHARSET, TRUE), zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_fax', 15));
   }
 ?></td>
           </tr>
@@ -1047,14 +1121,14 @@ if ($processed == true) {
                   <?php echo TABLE_HEADING_ID; ?>
                 </td>
                 <td class="dataTableHeadingContent" align="left" valign="top">
-                  <?php echo (($_GET['list_order']=='lastname' or $_GET['list_order']=='lastname-desc') ? '<span class="SortOrderHeader">' . TABLE_HEADING_LASTNAME . '</span>' : TABLE_HEADING_LASTNAME); ?><br>
-                  <a href="<?php echo zen_href_link(basename($PHP_SELF), zen_get_all_get_params(array('list_order','page')) . 'list_order=lastname', 'NONSSL'); ?>"><?php echo ($_GET['list_order']=='lastname' ? '<span class="SortOrderHeader">Asc</span>' : '<span class="SortOrderHeaderLink">Asc</span>'); ?></a>&nbsp;
-                  <a href="<?php echo zen_href_link(basename($PHP_SELF), zen_get_all_get_params(array('list_order','page')) . 'list_order=lastname-desc', 'NONSSL'); ?>"><?php echo ($_GET['list_order']=='lastname-desc' ? '<span class="SortOrderHeader">Desc</span>' : '<span class="SortOrderHeaderLink">Desc</span>'); ?></a>
-                </td>
-                <td class="dataTableHeadingContent" align="left" valign="top">
                   <?php echo (($_GET['list_order']=='firstname' or $_GET['list_order']=='firstname-desc') ? '<span class="SortOrderHeader">' . TABLE_HEADING_FIRSTNAME . '</span>' : TABLE_HEADING_FIRSTNAME); ?><br>
                   <a href="<?php echo zen_href_link(basename($PHP_SELF), zen_get_all_get_params(array('list_order','page')) . 'list_order=firstname', 'NONSSL'); ?>"><?php echo ($_GET['list_order']=='firstname' ? '<span class="SortOrderHeader">Asc</span>' : '<span class="SortOrderHeaderLink">Asc</span>'); ?></a>&nbsp;
                   <a href="<?php echo zen_href_link(basename($PHP_SELF), zen_get_all_get_params(array('list_order','page')) . 'list_order=firstname-desc', 'NONSSL'); ?>"><?php echo ($_GET['list_order']=='firstname-desc' ? '<span class="SortOrderHeader">Desc</span>' : '<span class="SortOrderHeaderLink">Desc</span>'); ?></a>
+                </td>
+                <td class="dataTableHeadingContent" align="left" valign="top">
+                  <?php echo (($_GET['list_order']=='lastname' or $_GET['list_order']=='lastname-desc') ? '<span class="SortOrderHeader">' . TABLE_HEADING_LASTNAME . '</span>' : TABLE_HEADING_LASTNAME); ?><br>
+                  <a href="<?php echo zen_href_link(basename($PHP_SELF), zen_get_all_get_params(array('list_order','page')) . 'list_order=lastname', 'NONSSL'); ?>"><?php echo ($_GET['list_order']=='lastname' ? '<span class="SortOrderHeader">Asc</span>' : '<span class="SortOrderHeaderLink">Asc</span>'); ?></a>&nbsp;
+                  <a href="<?php echo zen_href_link(basename($PHP_SELF), zen_get_all_get_params(array('list_order','page')) . 'list_order=lastname-desc', 'NONSSL'); ?>"><?php echo ($_GET['list_order']=='lastname-desc' ? '<span class="SortOrderHeader">Desc</span>' : '<span class="SortOrderHeaderLink">Desc</span>'); ?></a>
                 </td>
                 <td class="dataTableHeadingContent" align="left" valign="top">
                   <?php echo (($_GET['list_order']=='company' or $_GET['list_order']=='company-desc') ? '<span class="SortOrderHeader">' . TABLE_HEADING_COMPANY . '</span>' : TABLE_HEADING_COMPANY); ?><br>
@@ -1099,10 +1173,13 @@ if ($processed == true) {
     $search = '';
     if (isset($_GET['search']) && zen_not_null($_GET['search'])) {
       $keywords = zen_db_input(zen_db_prepare_input($_GET['search']));
-      $search = "where c.customers_lastname like '%" . $keywords . "%' or c.customers_firstname like '%" . $keywords . "%' or c.customers_email_address like '%" . $keywords . "%' or c.customers_telephone rlike ':keywords:' or a.entry_company rlike ':keywords:' or a.entry_street_address rlike ':keywords:' or a.entry_city rlike ':keywords:' or a.entry_postcode rlike ':keywords:'";
+      if (FURIKANA_NESESSARY)
+      $search = "where c.customers_lastname like '%" . $keywords . "%' or c.customers_firstname like '%" . $keywords . "%' or c.customers_email_address like '%" . $keywords . "%' or a.entry_telephone rlike ':keywords:' or a.entry_company rlike ':keywords:' or a.entry_street_address rlike ':keywords:' or a.entry_city rlike ':keywords:' or a.entry_postcode rlike ':keywords:' or c.customers_firstname_kana like '%" . $keywords . "%' or c.customers_lastname_kana like '%" . $keywords . "%' or a.entry_firstname_kana like '%" . $keywords . "%' or a.entry_lastname_kana like '%" . $keywords . "%'";
+      else
+      $search = "where c.customers_lastname like '%" . $keywords . "%' or c.customers_firstname like '%" . $keywords . "%' or c.customers_email_address like '%" . $keywords . "%' or a.entry_telephone rlike ':keywords:' or a.entry_company rlike ':keywords:' or a.entry_street_address rlike ':keywords:' or a.entry_city rlike ':keywords:' or a.entry_postcode rlike ':keywords:'";
       $search = $db->bindVars($search, ':keywords:', $keywords, 'regexp');
     }
-    $new_fields=', c.customers_telephone, a.entry_company, a.entry_street_address, a.entry_city, a.entry_postcode, c.customers_authorization, c.customers_referral';
+    $new_fields=', a.entry_telephone, a.entry_company, a.entry_street_address, a.entry_city, a.entry_postcode, c.customers_authorization, c.customers_referral';
     $customers_query_raw = "select c.customers_id, c.customers_lastname, c.customers_firstname, c.customers_email_address, c.customers_group_pricing, a.entry_country_id, a.entry_company, ci.customers_info_date_of_last_logon, ci.customers_info_date_account_created " . $new_fields . ",
     cgc.amount
     from " . TABLE_CUSTOMERS . " c
@@ -1183,8 +1260,8 @@ if (($_GET['page'] == '' or $_GET['page'] == '1') and $_GET['cID'] != '') {
       $zc_address_book_count = $zc_address_book_count_list->RecordCount();
 ?>
                 <td class="dataTableContent" align="right"><?php echo $customers->fields['customers_id'] . ($zc_address_book_count == 1 ? TEXT_INFO_ADDRESS_BOOK_COUNT . $zc_address_book_count : '<a href="' . zen_href_link(FILENAME_CUSTOMERS, 'action=list_addresses' . '&cID=' . $customers->fields['customers_id'] . ($_GET['page'] > 0 ? '&page=' . $_GET['page'] : ''), 'NONSSL') . '">' . TEXT_INFO_ADDRESS_BOOK_COUNT . $zc_address_book_count . '</a>'); ?></td>
-                <td class="dataTableContent"><?php echo $customers->fields['customers_lastname']; ?></td>
                 <td class="dataTableContent"><?php echo $customers->fields['customers_firstname']; ?></td>
+                <td class="dataTableContent"><?php echo $customers->fields['customers_lastname']; ?></td>
                 <td class="dataTableContent"><?php echo $customers->fields['entry_company']; ?></td>
                 <td class="dataTableContent"><?php echo zen_date_short($info->fields['date_account_created']); ?></td>
                 <td class="dataTableContent"><?php echo zen_date_short($customers->fields['customers_info_date_of_last_logon']); ?></td>

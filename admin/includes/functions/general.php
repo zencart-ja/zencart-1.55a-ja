@@ -4,7 +4,7 @@
  * @copyright Copyright 2003-2016 Zen Cart Development Team
  * @copyright Portions Copyright 2003 osCommerce
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: Author: zcwilt  Fri Apr 22 12:16:32 2016 -0500 Modified in v1.5.5 $
+ * @version $Id: Author: DrByte  Thu Mar 3 12:16:32 2016 -0500 Modified in v1.5.5 $
  */
 
 ////
@@ -844,10 +844,12 @@
   function zen_get_country_zones($country_id) {
     global $db;
     $zones_array = array();
+// -> for jp : CHANGE "order by zone_name" to "order by zone_id"
     $zones = $db->Execute("select zone_id, zone_name
                            from " . TABLE_ZONES . "
                            where zone_country_id = '" . (int)$country_id . "'
-                           order by zone_name");
+                           order by zone_id");
+// <- for jp : CHANGE "order by zone_name" to "order by zone_id"
 
     while (!$zones->EOF) {
       $zones_array[] = array('id' => $zones->fields['zone_id'],
@@ -3301,7 +3303,7 @@ function zen_copy_products_attributes($products_id_from, $products_id_to) {
 /**
  * return switch name
  */
-    function zen_get_show_product_switch_name($lookup, $field, $prefix= 'SHOW_', $suffix= '_INFO', $field_prefix= '_', $field_suffix='') {
+    function zen_get_show_product_switch_name($lookup, $field, $suffix= 'SHOW_', $prefix= '_INFO', $field_prefix= '_', $field_suffix='') {
       global $db;
       $type_lookup = 0;
       $type_handler = '';
@@ -3312,7 +3314,7 @@ function zen_copy_products_attributes($products_id_from, $products_id_to) {
       $sql = "select type_handler from " . TABLE_PRODUCT_TYPES . " where type_id = '" . (int)$type_lookup . "'";
       $result = $db->Execute($sql);
       if (!$result->EOF) $type_handler = $result->fields['type_handler'];
-      $zv_key = strtoupper($prefix . $type_handler . $suffix . $field_prefix . $field . $field_suffix);
+      $zv_key = strtoupper($suffix . $type_handler . $prefix . $field_prefix . $field . $field_suffix);
 
       return $zv_key;
     }
