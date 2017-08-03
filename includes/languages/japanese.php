@@ -17,7 +17,7 @@
   define('FOOTER_TEXT_BODY', 'Copyright &copy; ' . date('Y') . ' <a href="' . zen_href_link(FILENAME_DEFAULT) . '" target="_blank">' . STORE_NAME . '</a>. Powered by <a href="http://www.zen-cart.com" target="_blank">Zen Cart</a> / <a href="http://www.zen-cart.jp" target="_blank">zen-cart.jp</a>');
 
 // look in your $PATH_LOCALE/locale directory for available locales..
-  $locales = array('ja_JP', 'ja_JP.UTF-8', 'ja');
+  $locales = array('ja_JP.UTF-8', 'ja_JP', 'ja');
   @setlocale(LC_TIME, $locales);
 mb_language('Japanese');
 mb_internal_encoding("UTF-8");

@@ -30,7 +30,7 @@ define('HEADER_LOGO_HEIGHT', '70px');
 define('HEADER_LOGO_IMAGE', 'logo.gif');
 
 // look in your $PATH_LOCALE/locale directory for available locales..
-$locales = array('ja_JP', 'ja_JP.UTF-8', 'ja');
+$locales = array('ja_JP.UTF-8', 'ja_JP', 'ja');
 @setlocale(LC_TIME, $locales);
 define('DATE_FORMAT_SHORT', '%Y/%m/%d');  // this is used for strftime()
 define('DATE_FORMAT_LONG', '%Y年%m月%d日(%a)'); // this is used for strftime()
