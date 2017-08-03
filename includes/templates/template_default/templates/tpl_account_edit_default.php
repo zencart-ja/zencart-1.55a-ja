@@ -35,9 +35,21 @@
 <?php echo zen_draw_input_field('firstname', $account->fields['customers_firstname'], 'id="firstname" placeholder="' . ENTRY_FIRST_NAME_TEXT . '"' . ((int)ENTRY_FIRST_NAME_MIN_LENGTH > 0 ? ' required' : '')); ?>
 <br class="clearBoth" />
 
+<?php if (FURIKANA_NESESSARY) { ?>
+<label class="inputLabel" for="firstname_kana"><?php echo ENTRY_FIRST_NAME_KANA; ?></label>
+<?php echo zen_draw_input_field('firstname_kana', $account->fields['customers_firstname_kana'], 'id="firstname_kana" placeholder="' . ENTRY_FIRST_NAME_KANA_TEXT . '"' . ((int)ENTRY_FIRST_NAME_KANA_MIN_LENGTH > 0 ? ' required' : '')); ?>
+<br class="clearBoth" />
+<?php } ?>
+
 <label class="inputLabel" for="lastname"><?php echo ENTRY_LAST_NAME; ?></label>
 <?php echo zen_draw_input_field('lastname', $account->fields['customers_lastname'], 'id="lastname" placeholder="' . ENTRY_LAST_NAME_TEXT . '"' . ((int)ENTRY_LAST_NAME_MIN_LENGTH > 0 ? ' required' : '')); ?>
 <br class="clearBoth" />
+
+<?php if (FURIKANA_NESESSARY) { ?>
+<label class="inputLabel" for="lastname_kana"><?php echo ENTRY_LAST_NAME_KANA; ?></label>
+<?php echo zen_draw_input_field('lastname_kana', $account->fields['customers_lastname_kana'], 'id="lastname_kana" placeholder="' . ENTRY_LAST_NAME_KANA_TEXT . '"' . ((int)ENTRY_LAST_NAME_KANA_MIN_LENGTH > 0 ? ' required' : '')); ?>
+<br class="clearBoth" />
+<?php } ?>
 
 <?php
   if (ACCOUNT_DOB == 'true') {
@@ -57,9 +69,15 @@
 <?php echo zen_draw_input_field('telephone', $account->fields['customers_telephone'], 'id="telephone" placeholder="' . ENTRY_TELEPHONE_NUMBER_TEXT . '"' . ((int)ENTRY_TELEPHONE_MIN_LENGTH > 0 ? ' required' : ''), 'tel'); ?>
 <br class="clearBoth" />
 
+<?php
+  if (ACCOUNT_FAX_NUMBER == 'true') {
+?>
 <label class="inputLabel" for="fax"><?php echo ENTRY_FAX_NUMBER; ?></label>
 <?php echo zen_draw_input_field('fax', $account->fields['customers_fax'], 'id="fax" placeholder="' . ENTRY_FAX_NUMBER_TEXT . '"', 'tel'); ?>
 <br class="clearBoth" />
+<?php
+  }
+?>
 
 <?php
   if (CUSTOMERS_REFERRAL_STATUS == 2 and $customers_referral == '') {
